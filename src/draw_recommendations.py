@@ -164,7 +164,7 @@ def fill_output(RS,MATS,DES,BRANCHESS):
             out['rho_DE'] += [DE[n].rho]*len(r)
             out['T_DE'] += [DE[n].T]*len(r)
             out['BE_id'] += [DE[n].be]*len(r)
-            out['R'] += [1]*len(r)
+            out['rec'] += [1]*len(r)
             for b in r:
                 out['siret'].append(BRANCHES[b].siret)
                 out['rome_BB'].append(BRANCHES[b].rome)
@@ -187,50 +187,57 @@ def transform(out):
     
     out['tot_h'] = out['h'].groupby(out['siret']).transform('sum')
 
-    out['R'] = out['R'].groupby([out['siret'],out['rome_BB']]).transform('sum')
+    out['R'] = out['rec'].groupby([out['siret']]).transform('sum')
+    
+    out['rh'] = out['R']/out['tot_h']
     
 
 
 def run_reg(results,out):
     
-    results['m_BB'] = sm.ols(formula="R ~ m_BB*h + C(BE_id)*C(rome_BB)", data=out[['siret','R','m_BB','rho_BB','BE_id','rome_BB','h']].drop_duplicates()).fit()
+    results['m_BB'] = sm.ols(formula="R ~ m_BB*tot_h ", data=out[['siret','R','tot_h','m_BB']].drop_duplicates()).fit()
     
-    results['rho_BB'] = sm.ols(formula="d ~ rho_BB + m_BB + C(BE_id)*C(rome_BB)", data=out).fit()
+    results['rho_BB'] = sm.ols(formula="d ~ rho_BB", data=out).fit()
     
-    results['rho_DE'] = sm.ols(formula="d ~ rho_DE + T_DE + C(BE_id)*C(rome_DE)", data=out).fit()
+    results['rho_DE'] = sm.ols(formula="d ~ rho_DE", data=out).fit()
+    
+    #results['T_DE'] = sm.ols(formula="DE_hired ~ T_DE + C(BE_id)", data=out[['bni','DE_hired','d_DE','T_DE','rome_DE','BE_id']].drop_duplicates()).fit()
+    
+    #results['R'] = sm.ols(formula="BB_hires ~ R + h + C(BE_id)", data=out[['siret','BB_hires','d_BB','R','tot_h','rome_BB','BE_id']].drop_duplicates()).fit()
+    
     
     results['t'] = {v:results[v].tvalues[v] for v in ['rho_DE','rho_BB','m_BB']}
     
     results['R2'] = {v:results[v].rsquared for v in ['rho_DE','rho_BB','m_BB']}
     
-    out['R_d'] = out['rec'].groupby([out['siret'],out['d']]).transform('sum')/out['tot_h']
+    #out['R_d'] = out['rec'].groupby([out['siret'],out['d']]).transform('sum')/out['tot_h']
     
-    out['std_d_DE'] = out['d'].groupby([out['BE_id'],out['rome_DE']]).transform('std')
+    #out['std_d_DE'] = out['d'].groupby([out['BE_id'],out['rome_DE']]).transform('std')
     
-    out['mean_d_DE'] = out['d'].groupby([out['BE_id'],out['rome_DE']]).transform('mean')
+    #out['mean_d_DE'] = out['d'].groupby([out['BE_id'],out['rome_DE']]).transform('mean')
     
-    out['std_d_BB'] = out['d'].groupby([out['BE_id'],out['naf']]).transform('std')
+    #out['std_d_BB'] = out['d'].groupby([out['BE_id'],out['naf']]).transform('std')
     
-    out['mean_d_BB'] = out['d'].groupby([out['BE_id'],out['naf']]).transform('mean')
+    #out['mean_d_BB'] = out['d'].groupby([out['BE_id'],out['naf']]).transform('mean')
     
-    out['std_d_BB_within'] = out['d'].groupby([out['BE_id'],out['naf'],out['siret']]).transform('std')
+    #out['std_d_BB_within'] = out['d'].groupby([out['BE_id'],out['naf'],out['siret']]).transform('std')
     
-    out['std_R'] = out[['siret','R','BE_id','naf']].drop_duplicates().R.groupby([out['BE_id'],out['naf']]).transform('std')
+    #out['std_R'] = out[['siret','R','BE_id','naf']].drop_duplicates().R.groupby([out['BE_id'],out['naf']]).transform('std')
     
-    out['mean_R'] = out[['siret','R','BE_id','naf']].drop_duplicates().R.groupby([out['BE_id'],out['naf']]).transform('mean')
+    #out['mean_R'] = out[['siret','R','BE_id','naf']].drop_duplicates().R.groupby([out['BE_id'],out['naf']]).transform('mean')
     
-    out['std_R_d'] = out[['siret','R_d','d','BE_id','naf']].drop_duplicates().R_d.groupby([out['BE_id'],out['naf'],out['d']]).transform('std')
+    #out['std_R_d'] = out[['siret','R_d','d','BE_id','naf']].drop_duplicates().R_d.groupby([out['BE_id'],out['naf'],out['d']]).transform('std')
 
-    out['mean_R_d'] = out[['siret','R_d','d','BE_id','naf']].drop_duplicates().R_d.groupby([out['BE_id'],out['naf'],out['d']]).transform('mean')
+    #out['mean_R_d'] = out[['siret','R_d','d','BE_id','naf']].drop_duplicates().R_d.groupby([out['BE_id'],out['naf'],out['d']]).transform('mean')
     
-    sum_treat = {'d_DE' : [out[['BE_id','rome_DE','mean_d_DE']].drop_duplicates().mean_d_DE.median(),
-                         out[['BE_id','rome_DE','std_d_DE']].drop_duplicates().std_d_DE.median()],
-               'd_BB' : [out[['BE_id','naf','mean_d_BB']].drop_duplicates().mean_d_BB.median(),
-                         out[['BE_id','naf','std_d_BB']].drop_duplicates().std_d_BB.median()],
-               'R_bb' : [out[['BE_id','naf','mean_R']].drop_duplicates().mean_R.median(),
-                         out[['BE_id','naf','std_R']].drop_duplicates().std_R.median()],
-               'R_bb_d' : [out[['BE_id','naf','d','mean_R_d']].drop_duplicates().groupby(['d']).mean_R_d.median(),
-                           out[['BE_id','naf','d','std_R_d']].drop_duplicates().groupby(['d']).std_R_d.median()]
-              }
+    #sum_treat = {'d_DE' : [out[['BE_id','rome_DE','mean_d_DE']].drop_duplicates().mean_d_DE.median(),
+     #                    out[['BE_id','rome_DE','std_d_DE']].drop_duplicates().std_d_DE.median()],
+      #         'd_BB' : [out[['BE_id','naf','mean_d_BB']].drop_duplicates().mean_d_BB.median(),
+       #                  out[['BE_id','naf','std_d_BB']].drop_duplicates().std_d_BB.median()],
+        #       'R_bb' : [out[['BE_id','naf','mean_R']].drop_duplicates().mean_R.median(),
+         #                out[['BE_id','naf','std_R']].drop_duplicates().std_R.median()],
+          #     'R_bb_d' : [out[['BE_id','naf','d','mean_R_d']].drop_duplicates().groupby(['d']).mean_R_d.median(),
+           #                out[['BE_id','naf','d','std_R_d']].drop_duplicates().groupby(['d']).std_R_d.median()]
+           #   }
     
-    results['sum_treat'] = sum_treat
+    #results['sum_treat'] = sum_treat

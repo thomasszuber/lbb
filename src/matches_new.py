@@ -1,3 +1,4 @@
+
 # %% Useful modules 
 
 import numpy as np
@@ -47,14 +48,14 @@ t = [8,4]
 
 mH,mL = 1.5,0.5
 
-d = 15
+dHH = 6
+
+dHL = 3
 
 b = 3
 
-comb = [((rho_equiv(mH,mL,b,d)),(rho_equiv(mH,mL,b,d)), 
-         ((mL,b),(mH,b))) for b in [3,5,10]]
-
-comb = [((1.0,0.5),(1.0,0.5),((mL,b),(mH,b))) for b in [3]]
+comb = [((rho_equiv(mH,mL,b,dHH,dHL)),(rho_equiv(mH,mL,b,dHH,dHL)), 
+         ((mL,b),(mH,b))) for b in [3]]
 # %%
 
 results = {}
@@ -77,17 +78,15 @@ for i, (rho_DE, rho_BB, m) in enumerate(comb):
         
         MAT = Matrices(distance,DE,BRANCHES)
 
-        results[i][be] = minimize(lambda beta: -get_matches(beta,MAT,DE,BRANCHES,method),np.zeros(4),method=method.opt) 
+        results[i][be] = minimize(lambda beta: -get_matches(beta,MAT,DE,BRANCHES,method),np.zeros(3),method=method.opt) 
         
         print(results[i][be].x)
         
 
-save_results = {v:[] for v in ['BE_id','d','rho*d','m','h',
-                               'd_var','rho*d_var','m_var','h_var',
-                               'gamma','equiv_d','mH','mL','rhoH','rhoL']
+save_results = {v:[] for v in ['BE_id','rho*d','m','h',
+                               'rho*d_var','m_var','h_var',
+                               'gamma','dHH','dHL','mH','mL','rhoH','rhoL']
                 }
-
-
 
 for i, (rho_DE, rho_BB, m) in enumerate(comb):
     
@@ -95,17 +94,14 @@ for i, (rho_DE, rho_BB, m) in enumerate(comb):
         
         save_results['BE_id'].append(be)
         
-        save_results['d'].append(results[i][be].x[0])
-        save_results['d_var'].append(results[i][be].x[0]/results[i][be].hess_inv[0,0])
+        save_results['rho*d'].append(results[i][be].x[0])
+        save_results['rho*d_var'].append(results[i][be].x[0]/results[i][be].hess_inv[0,0])
         
-        save_results['rho*d'].append(results[i][be].x[1])
-        save_results['rho*d_var'].append(results[i][be].x[1]/results[i][be].hess_inv[1,1])
+        save_results['m'].append(results[i][be].x[1])
+        save_results['m_var'].append(results[i][be].x[1]/results[i][be].hess_inv[1,1])
         
-        save_results['m'].append(results[i][be].x[2])
-        save_results['m_var'].append(results[i][be].x[2]/results[i][be].hess_inv[2,2])
-        
-        save_results['h'].append(results[i][be].x[3])
-        save_results['h_var'].append(results[i][be].x[3]/results[i][be].hess_inv[3,3])
+        save_results['h'].append(results[i][be].x[2])
+        save_results['h_var'].append(results[i][be].x[2]/results[i][be].hess_inv[2,2])
         
         save_results['gamma'].append(m[0][1])
 
@@ -113,7 +109,9 @@ for i, (rho_DE, rho_BB, m) in enumerate(comb):
         
         save_results['mH'].append(m[1][0])
         
-        save_results['equiv_d'].append(d)
+        save_results['dHH'].append(dHH)
+        
+        save_results['dHL'].append(dHL)
         
         save_results['rhoH'].append(rho_BB[0])
         
@@ -127,13 +125,13 @@ t = [8,4]
 
 saved_results = pd.read_csv(f"../../bases/results_{sample}.csv")
 
-median_beta = [saved_results['d'].median(),
-         saved_results['rho*d'].median(),
+saved_results['d'] = - saved_results['m']/(saved_results['rho*d']*(1-(0.98**2)/4))
+
+median_beta = [saved_results['rho*d'].median(),
          saved_results['m'].median(),
          saved_results['h'].median()]
 
-mean_beta = [saved_results['d'].mean(),
-         saved_results['rho*d'].mean(),
+mean_beta = [saved_results['rho*d'].mean(),
          saved_results['m'].mean(),
          saved_results['h'].mean()]
 
@@ -147,9 +145,9 @@ for i,p in param.iterrows():
     
     results[i]['param'] = {'gamma' : p.gamma, 'equiv_d' : p.equiv_d, 'mH': p.mH, 'mL':p.mL}
     
-    results[i]['betas'] = {row['BE_id']:np.array([row['d'],row['rho*d'],row['m'],row['h']]) for j,row in saved_results.loc[saved_results.gamma == p.gamma].loc[saved_results.equiv_d == p.equiv_d].loc[saved_results.mH == p.mH].loc[saved_results.mL == p.mL].iterrows()}
+    results[i]['betas'] = {row['BE_id']:np.array([row['rho*d'],row['m'],row['h']]) for j,row in saved_results.loc[saved_results.gamma == p.gamma].loc[saved_results.equiv_d == p.equiv_d].loc[saved_results.mH == p.mH].loc[saved_results.mL == p.mL].iterrows()}
 
-  
+# %%  
     
 method = Method(correct_alpha=False,draws='recall',opt='bfgs',var=True)
 

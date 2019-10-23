@@ -57,7 +57,9 @@ def bootstrap_pd(out,nb_iter=100,true_param=[0.7,0.2,3],seed=123):
 
     SEED = rd.randint(1,high=nb_iter*1000,size=nb_iter)
 
-    boot = {v:[] for v in ['d','R','pi']} #'d_DE','d_BB','d_DE:T_DE','d_BB:R','T_DE','R','h']}
+   # boot = {v:[] for v in ['d','R','pi']} 
+
+    boot = {v:[] for v in ['T_DE','R','h']}
 
     for i,seed in enumerate(SEED):
     
@@ -65,23 +67,23 @@ def bootstrap_pd(out,nb_iter=100,true_param=[0.7,0.2,3],seed=123):
     
         simulate_results_pd(out,param=true_param,seed=seed)
     
-        res = sm.ols(formula="hired ~ d + R + pi + C(BE_id)", data=out).fit()
+        #res = sm.ols(formula="hired ~ d + R + pi + C(BE_id)", data=out).fit()
 
-        for v in ['d','R','pi']:
+        #for v in ['d','R','pi']:
+            
+            #boot[v].append(res.params[v])
+    
+        res = sm.ols(formula="DE_hired ~ T_DE + C(BE_id)", data=out[['bni','DE_hired','d_DE','T_DE','rome_DE','BE_id']].drop_duplicates()).fit()
+    
+        for v in ['T_DE']:
             
             boot[v].append(res.params[v])
-    
-        #res = sm.ols(formula="DE_hired ~ d_DE*T_DE + C(BE_id)*C(rome_DE)", data=out[['bni','DE_hired','d_DE','T_DE','rome_DE','BE_id']].drop_duplicates()).fit()
-    
-        #for v in ['d_DE','T_DE','d_DE:T_DE']:
             
-            #boot[v].append(res.params[v])
-            
-        #res = sm.ols(formula="BB_hires ~ d_BB*R + h + C(BE_id)*C(rome_BB)", data=out[['siret','BB_hires','d_BB','R','h','rome_BB','BE_id']].drop_duplicates()).fit()
+        res = sm.ols(formula="BB_hires ~ R + h + C(BE_id)", data=out[['siret','BB_hires','d_BB','R','h','rome_BB','BE_id']].drop_duplicates()).fit()
     
-        #for v in ['d_BB','d_BB:R','R','h']:
+        for v in ['R','h']:
             
-            #boot[v].append(res.params[v])
+            boot[v].append(res.params[v])
         
 
     return {v:np.mean(betas) for v,betas in boot.items()}, {v:np.var(betas) for v,betas in boot.items()} 

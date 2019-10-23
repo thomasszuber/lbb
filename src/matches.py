@@ -10,7 +10,13 @@ romes = list(distance.keys())
 
 # %% 
 
-def rho_equiv(mH,mL,b,d):
+def rho_equiv(mH,mL,b,dHH,dHL):
+    rhoH = np.round(((1+(mH*((b-1)/2)**(-1/b))**(-b))/(1+(mL*((b)/2)**(-1/b))**(-b)))**(1/(2*dHH*b)),2)
+    rhoL = (((1+(mH*((b-1)/2)**(-1/b))**(-b))/(1+(mL*((b)/2)**(-1/b))**(-b)))**(1/(dHL*b)))/rhoH
+    rhoL = np.round(rhoL,2)
+    return rhoH,rhoL
+
+def rho_equiv_old(mH,mL,b,d):
     rhoH = np.round(((1+mH**(-b))/(1+mL**(-b)))**(1/(2*d)),2)
     rhoL = np.round(rhoH/2,2)
     return rhoH,rhoL
@@ -51,12 +57,12 @@ def get_X(D,LOCAL_THETA,DE,BRANCHES):
     X = {}
     #THETA = get_THETA(DE,BRANCHES)
     for n,de in enumerate(DE):
-        X[n] = np.empty(shape=(4,len(BRANCHES)))
+        X[n] = np.empty(shape=(3,len(BRANCHES)))
         for b,branch in enumerate(BRANCHES):
-            X[n][0][b] = D[n,b]
-            X[n][1][b] = branch.rho*de.rho*D[n,b]
-            X[n][2][b] = branch.m[0]
-            X[n][3][b] = branch.hirings
+            #X[n][0][b] = D[n,b]
+            X[n][0][b] = (1-branch.rho*de.rho)*D[n,b]
+            X[n][1][b] = branch.m[0]
+            X[n][2][b] = branch.hirings
             #X[n][4][b] = LOCAL_THETA[b]
             ##X[n][4][b] = THETA[branch.rome]['U']
             #X[n][5][b] = THETA[branch.rome]['V']
@@ -64,13 +70,13 @@ def get_X(D,LOCAL_THETA,DE,BRANCHES):
 
 def interpret(beta):
     result = {}
-    result['d'] = round(beta[0],2)
-    result['rhos*d'] = round(beta[1],2)
-    result['m'] = round(beta[2],2) 
-    result['h'] = round(beta[3],2)
+    #result['d'] = round(beta[0],2)
+    result['rhos*d'] = round(beta[0],2)
+    result['m'] = round(beta[1],2) 
+    #result['h'] = round(beta[2],2)
     return result
     
-def get_ALPHA(beta,MAT,DE,BRANCHES,method,beta_default=np.array([-1,0,0,0])):
+def get_ALPHA(beta,MAT,DE,BRANCHES,method,beta_default=np.array([-1,0,0])):
     for n in MAT.X.keys():
         np.dot(beta,MAT.X[n],out=MAT.ALPHA[n])
         np.exp(MAT.ALPHA[n],out=MAT.ALPHA[n])
