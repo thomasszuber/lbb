@@ -53,14 +53,13 @@ def get_H_M(BRANCHES):
     M1 = np.array([branch.m[1] for branch in BRANCHES])
     return H, M0, M1
 
-def get_X(D,LOCAL_THETA,DE,BRANCHES):
+def get_X(distance,DE,BRANCHES):
     X = {}
     #THETA = get_THETA(DE,BRANCHES)
     for n,de in enumerate(DE):
         X[n] = np.empty(shape=(3,len(BRANCHES)))
         for b,branch in enumerate(BRANCHES):
-            #X[n][0][b] = D[n,b]
-            X[n][0][b] = (1-branch.rho*de.rho)*D[n,b]
+            X[n][0][b] = (1-branch.rho*de.rho)*distance[de.rome][branch.rome]
             X[n][1][b] = branch.m[0]
             X[n][2][b] = branch.hirings
             #X[n][4][b] = LOCAL_THETA[b]
@@ -175,11 +174,18 @@ class Matrices:
         for b,branch in enumerate(BRANCHES):
                self.LOCAL_THETA[b] = local_theta[branch.rome]['theta']
                    
-        self.X = get_X(self.D,self.LOCAL_THETA,DE,BRANCHES)
+        self.X = get_X(distance,DE,BRANCHES)
         
         self.M0 = self.M0*self.H*self.LOCAL_THETA
         self.REC = sp.lil_matrix((len(DE),len(BRANCHES)),dtype=int) 
-        self.PASS = sp.csr_matrix((len(DE),len(BRANCHES))) 
+        self.PASS = sp.csr_matrix((len(DE),len(BRANCHES)))
+        
+class SpMatrices: 
+    def __init__(self,distance,DE,BRANCHES):
+        self.ALPHA = np.zeros(shape=(len(DE),len(BRANCHES)))
+        self.P = np.zeros(shape=(len(DE),len(BRANCHES)))
+        self.X = get_X(distance,DE,BRANCHES)
+        
                        
 class Method: 
     def __init__(self,var=True,opt='Nelder-Mead',correct_alpha=True,draws='recall'):

@@ -16,7 +16,30 @@ from matches import f_simple, f
 
 # %% NON PARAMETRIC 
 
-def simulate_results_pd(out,param=[0.5,0.2,3],seed=123):
+def simulate_prob(out,param=[0.9,0.9,3],tau=1):
+
+    # True Paramaters 
+    
+    rho_DE, rho_BB, m1 = param 
+    
+    out['p'] = tau*rho_DE**out['d']
+
+    out['p'] = f_simple(out['p'].groupby([out['siret'],out['rome_BB']]).transform('sum')/out['h'],1,m1)*out['p']
+    
+    out['p'] = out['p']*rho_BB**out['d']
+
+    out['p_DE'] = 1 - out['p']
+    
+    out['p_DE'] = (1 - out['p_DE'].groupby([out['bni']]).transform('prod'))
+    
+    out['hires'] = out['p']/out['T_DE']
+    
+    out['hires'] = out['hires'].groupby([out['siret']]).transform('sum')
+    
+    
+# %%     
+
+def simulate_results_pd(out,param=[0.5,0.2,3],tau=1,seed=123):
     
     rd.seed(seed)
     

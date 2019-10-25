@@ -6,6 +6,8 @@ import rome
 
 import json 
 
+import pandas as pd
+
 graph = rome.get_graph()
 
 romes = list(graph.keys())
@@ -32,6 +34,16 @@ def get_distance(romes,g):
     return distance
 
 distance = get_distance(romes,g)
+
+csv = {v:[] for v in ['rome','prev_rome','d']}
+for prev_rome, romes in distance.items(): 
+    for next_rome in romes: 
+        csv['rome'].append(next_rome)
+        csv['prev_rome'].append(prev_rome)
+        csv['d'].append(distance[prev_rome][next_rome])
+
+pd.DataFrame(csv).to_csv("../../bases/distances.csv")
+
 
 isolated = [rome for rome in romes if np.mean([d for connex,d in distance[rome].items() if connex != rome]) >= 15]
 

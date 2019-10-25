@@ -11,7 +11,7 @@ class JobSeeker:
         self.theta = theta
         
 class Branch: 
-    def __init__(self,rome,rho,m,hirings,siret='.',nb='.',be='.',naf='.'):
+    def __init__(self,rome,rho,m,hirings,siret='.',nb='.',be='.',naf='.',tot_hirings='.'):
         self.rho = rho
         self.m = m 
         self.hirings = hirings
@@ -20,7 +20,7 @@ class Branch:
         self.nb = nb
         self.be = be
         self.naf = naf
-        self.tot_hirings = None 
+        self.tot_hirings = tot_hirings 
     def theta(self,theta):
         self.theta = theta     
         
