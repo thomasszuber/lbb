@@ -28,7 +28,7 @@ romes = list(distance.keys())
 
 rd.seed(123) 
 
-sample = 'small'
+sample = 'all'
 
 BB_data = pd.read_csv(f"../../bases/treated_BB_test_{sample}.csv")
 
@@ -36,13 +36,19 @@ BB_data = BB_data.sort_values(by=['BE_id','siret'])
 
 BB_data = BB_data.query(f'rome in {romes}')
 
-nb_BB = BB_data.shape[0] 
+BB_shrink = BB_data[['siret','tau']].drop_duplicates() 
 
-BB_data['draw'] = rd.uniform(size=nb_BB)
+nb_BB = BB_shrink.shape[0] 
+
+BB_shrink['draw'] = rd.uniform(size=nb_BB)
 
 #BB_data['tau'] = 1
 
-BB_data = BB_data.query('draw < tau')
+BB_shrink = BB_shrink.query('draw < tau')
+
+BB_shrink = BB_shrink.siret.unique().tolist()
+
+BB_data = BB_data.query(f'siret in {BB_shrink}')
 
 DE_data = pd.read_csv(f"../../bases/treated_DE_test_{sample}.csv")
 
@@ -59,7 +65,7 @@ DE_data = DE_data.query('draw < tau')
 BE = DE_data.BE_id.unique().tolist()
 
 
-# %% Parameters 
+# %% 
 
 tH, tL = 8, 4 
 
@@ -81,7 +87,6 @@ rho_DE = (rhoH,rhoL)
 
 m = ((mL,gamma),(mH,gamma))
 
-# %%
 
 method = Method(correct_alpha=True,draws='recall',opt='bfgs',var=True)
  
@@ -106,9 +111,7 @@ for be in BE:
 pd.DataFrame(save_results(results,tH,tL,mL,mH,dHL,dHH,rho_BB,m,BE)).to_csv(f"../../bases/results_prod_{sample}.csv",index = False)
 
 
-# %% Load
-
-sample = 'small'
+sample = 'all'
 
 BB_data = pd.read_csv(f"../../bases/treated_BB_test_{sample}.csv")
 
@@ -144,7 +147,7 @@ rho_BB = (rhoH,rhoL)
 
 rho_DE = (rhoH,rhoL)
 
-# %%
+
 
 betas = {}
 
