@@ -180,7 +180,7 @@ class Matrices:
         self.REC = sp.lil_matrix((len(DE),len(BRANCHES)),dtype=int) 
         self.PASS = sp.csr_matrix((len(DE),len(BRANCHES)))
         
-class SpMatrices: 
+class SpMatrices:  
     def __init__(self,distance,DE,BRANCHES):
         self.ALPHA = np.zeros(shape=(len(DE),len(BRANCHES)))
         self.P = np.zeros(shape=(len(DE),len(BRANCHES)))

@@ -27,7 +27,7 @@ def draws_without_recall(objects,prob,nb_draws):
         pi = [p/sum(pi) for p in pi]
     return draws
 
-def recommendations(beta,MAT,DE,BRANCHES,method,seed=123,beta_default=np.array([-1,0,0,0])):
+def recommendations(beta,MAT,DE,BRANCHES,method,seed=123,beta_default=np.array([-1,0,0])):
     rd.seed(seed)
     R = {}
     get_ALPHA(beta,MAT,DE,BRANCHES,method,beta_default=beta_default)
@@ -46,12 +46,14 @@ def recommendations(beta,MAT,DE,BRANCHES,method,seed=123,beta_default=np.array([
     #        MAT.REC[n,b] = 1
     return R
 
-def draw_sparse(beta,DE,BRANCHES,max_branches=100,prob=False,beta_default=np.array([-1,0,0,0]),seed=123):
+def draw_sparse(beta,DE,BRANCHES,max_branches=100,prob=False,beta_default=np.array([-1,0,0]),seed=123):
     rd.seed(seed)
     R = {}
+    n_de = len(DE)
     if prob == True:
         P = {}
     for n,de in enumerate(DE):
+        print(f'{n+1} over {n_de} for be {de.be}')
         X = np.empty(shape=(3,len(BRANCHES)))
         for b,branch in enumerate(BRANCHES):
             X[0][b] = (1-branch.rho*de.rho)*distance[de.rome][branch.rome]

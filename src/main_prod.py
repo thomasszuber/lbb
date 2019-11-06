@@ -36,13 +36,13 @@ BB_data = BB_data.sort_values(by=['BE_id','siret'])
 
 BB_data = BB_data.query(f'rome in {romes}')
 
+#BB_data['tau'] = 1
+
 BB_shrink = BB_data[['siret','tau']].drop_duplicates() 
 
 nb_BB = BB_shrink.shape[0] 
 
 BB_shrink['draw'] = rd.uniform(size=nb_BB)
-
-#BB_data['tau'] = 1
 
 BB_shrink = BB_shrink.query('draw < tau')
 
@@ -141,12 +141,13 @@ param = saved_results[['gamma','tH','tL','dHH','dHL','mH','mL']].drop_duplicates
 
 m = [(mL,gamma),(mH,gamma)]
 
-t = [int(tH),int(tL)]
+rhoH, rhoL = rho_equiv(mH,mL,gamma,dHH,dHL)
 
+t = [int(tH),int(tL)]
+ 
 rho_BB = (rhoH,rhoL)
 
 rho_DE = (rhoH,rhoL)
-
 
 
 betas = {}
@@ -165,15 +166,15 @@ for be in BE:
     
     print(f'be = {be} with {len(BRANCHES)} BB and {len(DE)} DE.')
     
-    MAT = SpMatrices(distance,DE,BRANCHES)
+    #MAT = SpMatrices(distance,DE,BRANCHES)
           
-    R = recommendations(betas[be],MAT,DE,BRANCHES,method,beta_default=median_beta)
+    #R = recommendations(betas[be],MAT,DE,BRANCHES,method,beta_default=median_beta)
     
-    out = append_output(out,R,MAT,DE,BRANCHES) 
+    #out = append_output(out,R,MAT,DE,BRANCHES) 
           
-    #R,P =  draw_sparse(betas[be],DE,BRANCHES,max_branches=100,prob=True,beta_default=median_beta,seed=123)
+    R,P =  draw_sparse(betas[be],DE,BRANCHES,max_branches=np.inf,prob=True,beta_default=median_beta,seed=123)
     
-    #out = append_output_sparse(out,R,P,DE,BRANCHES) 
+    out = append_output_sparse(out,R,P,DE,BRANCHES) 
         
 transform(out)
     
